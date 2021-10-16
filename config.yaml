@@ -6,26 +6,18 @@ googleAnalytics: ''
 disqusShortname: ''
 params:
   banner:
-    buttonText: Get Started
+    buttonText: About Me
     subtitle: |-
       Hi, I'm Leilah and this is my website for CA05 Data Analytics.
     title: Home
   blog: {}
   contact:
-    address:
-      - city: City, ST 00000
-        country: Country
-        street: Street
-        title: Address
     buttonClear: Clear
     buttonSend: Send message
     email:
       - email: leilahp.mfa2022@london.edu
         title: Email
     enable: yes
-    phone:
-      - phone: (000) 000-0000 x1234
-        title: Phone
   custom_css: []
   custom_js: []
   description: Your description
@@ -80,14 +72,14 @@ params:
   tiles:
     enable: yes
     showcase:
+      - image: data_science.jpeg
+        subtitle: Why I decided to learn R
+        title: About Me
+        url: blogs/tempus      
       - image: LBS_campus.jpeg
-        subtitle: Ipsum Dolor Sit Amet
-        title: Aliquam
+        subtitle: Introduction to ggplot
+        title: LBS Pre-programme Assignment
         url: blogs/aliquam
-      - image: pic02.jpeg
-        subtitle: Feugiat Amet Tempus
-        title: Tempus
-        url: blogs/tempus
       - image: pic03.jpg
         subtitle: Lorem Etiam Nullam
         title: Magna

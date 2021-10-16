@@ -21,6 +21,7 @@ title: "Pre-programme Assignment: ggplot"
 </div>
 <div id="task-1-gapminder-country-comparison" class="section level2">
 <h2>Task 1: <code>gapminder</code> country comparison</h2>
+<p>The first task was to produce two graphs of how life expectancy has changed over the years using the <code>gapminder</code> dataset.</p>
 <p>The <code>gapminder</code> dataset has data on life expectancy, population, and GDP per capita for 142 countries from 1952 to 2007. First I glimpse the data and have a look at the first 20 rows.</p>
 <pre class="r"><code>glimpse(gapminder)</code></pre>
 <pre><code>## Rows: 1,704
@@ -55,7 +56,6 @@ title: "Pre-programme Assignment: ggplot"
 ## 18 Albania     Europe     1977    68.9  2509048     3533.
 ## 19 Albania     Europe     1982    70.4  2780097     3631.
 ## 20 Albania     Europe     1987    72    3075321     3739.</code></pre>
-<p>The task was to produce two graphs of how life expectancy has changed over the years.</p>
 <p>First I create the <code>country_data</code> and <code>continent_data</code>.</p>
 <pre class="r"><code>country_data &lt;- gapminder %&gt;% 
             filter(country == &quot;United Kingdom&quot;) 
@@ -102,8 +102,8 @@ plot1</code></pre>
 </blockquote>
 <p>Life expectancy in the Americas, Asia, Europe and Oceania has generally increased over time, most likely due to technological advancements and improvements in the quality of healthcare. The picture for Africa, however, is more mixed. Some African countries show declining life expectancy post-1980, perhaps as a result of outbreaks of disease such as AIDS.</p>
 </div>
-<div id="task-2-brexit-vote-analysis" class="section level1">
-<h1>Task 2: Brexit vote analysis</h1>
+<div id="task-2-brexit-vote-analysis" class="section level2">
+<h2>Task 2: Brexit vote analysis</h2>
 <p>For the second task, I was asked to look at the results of the 2016 Brexit vote in the UK. First I read the data using <code>read_csv()</code> and glimpse it.</p>
 <pre class="r"><code>brexit_results &lt;- read_csv(here::here(&quot;data&quot;,&quot;brexit_results.csv&quot;))
 
@@ -184,8 +184,8 @@ ggplot(brexit_results, aes(x = leave_share)) +
 <p><img src="/blogs/Leilah_Plant-Tchenguiz_pre_programme_assignment%20public_files/figure-html/brexit_immigration_plot-1.png" width="672" /></p>
 <p>As the proportion of native-born residents increases, the proportion in favour of Brexit increases.</p>
 </div>
-<div id="task-3-animal-rescue-incidents-attended-by-the-london-fire-brigade" class="section level1">
-<h1>Task 3: Animal rescue incidents attended by the London Fire Brigade</h1>
+<div id="task-3-animal-rescue-incidents-attended-by-the-london-fire-brigade" class="section level2">
+<h2>Task 3: Animal rescue incidents attended by the London Fire Brigade</h2>
 <p>The final task looked at animal rescue incidents attended by the London Fire Brigade.</p>
 <p><a href="https://data.london.gov.uk/dataset/animal-rescue-incidents-attended-by-lfb">The London Fire Brigade</a> attends a range of non-fire incidents (which we call ‘special services’). These ‘special services’ include assistance to animals that may be trapped or in distress. The data is provided from January 2009 and is updated monthly. A range of information is supplied for each incident including some location information (postcode, borough, ward), as well as the data/time of the incidents. We do not routinely record data about animal deaths or injuries.</p>
 <p>Please note that any cost included is a notional cost calculated based on the length of time rounded up to the nearest hour spent by Pump, Aerial and FRU appliances at the incident and charged at the current Brigade hourly rate.</p>

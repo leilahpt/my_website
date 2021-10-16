@@ -27,6 +27,8 @@ Hi, I'm Leilah and I'm a [Masters in Financial Analysis](https://www.london.edu/
 
 ## Task 1: `gapminder` country comparison
 
+The first task was to produce two graphs of how life expectancy has changed over the years using the `gapminder` dataset.
+
 The `gapminder` dataset has data on life expectancy, population, and GDP per capita for 142 countries from 1952 to 2007. First I glimpse the data and have a look at the first 20 rows.
 
 ```{r}
@@ -35,8 +37,6 @@ glimpse(gapminder)
 head(gapminder, 20) # look at the first 20 rows of the dataframe
 
 ```
-
-The task was to produce two graphs of how life expectancy has changed over the years.
 
 First I create the `country_data` and `continent_data`.
 
@@ -96,7 +96,7 @@ Finally, using the original `gapminder` data, I produce a life expectancy over t
 
 Life expectancy in the Americas, Asia, Europe and Oceania has generally increased over time, most likely due to technological advancements and improvements in the quality of healthcare. The picture for Africa, however, is more mixed. Some African countries show declining life expectancy post-1980, perhaps as a result of outbreaks of disease such as AIDS.
 
-# Task 2: Brexit vote analysis
+## Task 2: Brexit vote analysis
 
 For the second task, I was asked to look at the results of the 2016 Brexit vote in the UK. First I read the data using `read_csv()` and glimpse it.
 
@@ -183,7 +183,7 @@ ggplot(brexit_results, aes(x = born_in_uk, y = leave_share)) +
 
 As the proportion of native-born residents increases, the proportion in favour of Brexit increases. 
 
-# Task 3: Animal rescue incidents attended by the London Fire Brigade
+## Task 3: Animal rescue incidents attended by the London Fire Brigade
 
 The final task looked at animal rescue incidents attended by the London Fire Brigade.
 
