@@ -9,7 +9,7 @@ params:
     buttonText: Get Started
     subtitle: |-
       Hi, I'm Leilah and this is my website for CA05 Data Analytics.
-    title: About Me
+    title: Home
   blog: {}
   contact:
     address:
@@ -80,11 +80,11 @@ params:
   tiles:
     enable: yes
     showcase:
-      - image: pic01.jpg
+      - image: LBS_campus.jpeg
         subtitle: Ipsum Dolor Sit Amet
         title: Aliquam
         url: blogs/aliquam
-      - image: pic02.jpg
+      - image: pic02.jpeg
         subtitle: Feugiat Amet Tempus
         title: Tempus
         url: blogs/tempus
