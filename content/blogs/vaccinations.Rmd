@@ -57,7 +57,8 @@ In this short blog, we will reproduce a chart of vaccination levels against the 
 
 # Download CDC vaccination by county
 
-vaccinations <- vroom(here::here("data", "COVID-19_Vaccinations_in_the_United_States_County.csv")) %>% 
+cdc_url <- "https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD"
+vaccinations <- vroom(cdc_url) %>%
   janitor::clean_names() %>% 
   filter(fips != "UNK") # remove counties that have an unknown (UNK) FIPS code
 
