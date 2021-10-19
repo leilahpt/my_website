@@ -1,0 +1,269 @@
+---
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "2021-09-30"
+description: Do vaccination levels depend on voting preference? # the title that will show up once someone gets to this page
+draft: false
+image: vaccines.jpeg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: trump # slug is the shorthand URL address... no spaces plz
+title: Do vaccination levels depend on voting preference?
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>In this short blog, we will reproduce a chart of vaccination levels against the proportion of a state’s population who voted for Trump using updated data. The chart we wish to reproduce is available <a href="https://acasignups.net/21/07/18/racial-factor-theres-77-counties-which-are-deep-blue-also-low-vaxx-guess-what-they-have">here</a>.</p>
+<ol style="list-style-type: decimal">
+<li>To get vaccination by county, we will use <a href="https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-County/8xkx-amqh">data from the CDC</a></li>
+<li>We will use <a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ">County Presidential Election Returns 2000-2020</a></li>
+<li>Finally, we also need an estimate of the <a href="https://www.ers.usda.gov/webdocs/DataFiles/48747/PopulationEstimates.csv?v=2232">population of each county</a></li>
+</ol>
+<p>First we clean the elections data.</p>
+<pre class="r"><code>#MODIFYING THE ELECTIONS DATASET
+
+#Viewing the election dataset
+glimpse(election2020_results) </code></pre>
+<pre><code>## Rows: 22,093
+## Columns: 12
+## $ year           &lt;dbl&gt; 2020, 2020, 2020, 2020, 2020, 2020, 2020, 2020, 2020, 2…
+## $ state          &lt;chr&gt; &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, …
+## $ state_po       &lt;chr&gt; &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;…
+## $ county_name    &lt;chr&gt; &quot;AUTAUGA&quot;, &quot;AUTAUGA&quot;, &quot;AUTAUGA&quot;, &quot;BALDWIN&quot;, &quot;BALDWIN&quot;, …
+## $ fips           &lt;chr&gt; &quot;01001&quot;, &quot;01001&quot;, &quot;01001&quot;, &quot;01003&quot;, &quot;01003&quot;, &quot;01003&quot;, &quot;…
+## $ office         &lt;chr&gt; &quot;PRESIDENT&quot;, &quot;PRESIDENT&quot;, &quot;PRESIDENT&quot;, &quot;PRESIDENT&quot;, &quot;PR…
+## $ candidate      &lt;chr&gt; &quot;JOSEPH R BIDEN JR&quot;, &quot;OTHER&quot;, &quot;DONALD J TRUMP&quot;, &quot;JOSEPH…
+## $ party          &lt;chr&gt; &quot;DEMOCRAT&quot;, &quot;OTHER&quot;, &quot;REPUBLICAN&quot;, &quot;DEMOCRAT&quot;, &quot;OTHER&quot;,…
+## $ candidatevotes &lt;dbl&gt; 7503, 429, 19838, 24578, 1557, 83544, 4816, 80, 5622, 1…
+## $ totalvotes     &lt;dbl&gt; 27770, 27770, 27770, 109679, 109679, 109679, 10518, 105…
+## $ version        &lt;dbl&gt; 20210622, 20210622, 20210622, 20210622, 20210622, 20210…
+## $ mode           &lt;chr&gt; &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;…</code></pre>
+<pre class="r"><code>head(election2020_results)</code></pre>
+<pre><code>## # A tibble: 6 x 12
+##    year state  state_po county_name fips  office  candidate party candidatevotes
+##   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;     &lt;chr&gt;          &lt;dbl&gt;
+## 1  2020 ALABA… AL       AUTAUGA     01001 PRESID… JOSEPH R… DEMO…           7503
+## 2  2020 ALABA… AL       AUTAUGA     01001 PRESID… OTHER     OTHER            429
+## 3  2020 ALABA… AL       AUTAUGA     01001 PRESID… DONALD J… REPU…          19838
+## 4  2020 ALABA… AL       BALDWIN     01003 PRESID… JOSEPH R… DEMO…          24578
+## 5  2020 ALABA… AL       BALDWIN     01003 PRESID… OTHER     OTHER           1557
+## 6  2020 ALABA… AL       BALDWIN     01003 PRESID… DONALD J… REPU…          83544
+## # … with 3 more variables: totalvotes &lt;dbl&gt;, version &lt;dbl&gt;, mode &lt;chr&gt;</code></pre>
+<pre class="r"><code>#Checking the possible election candidates
+election2020_results %&gt;% 
+  select(candidate) %&gt;% 
+  unique() #We can see that Trump has been entered as &#39;DONALD J TRUMP&#39;</code></pre>
+<pre><code>## # A tibble: 4 x 1
+##   candidate        
+##   &lt;chr&gt;            
+## 1 JOSEPH R BIDEN JR
+## 2 OTHER            
+## 3 DONALD J TRUMP   
+## 4 JO JORGENSEN</code></pre>
+<pre class="r"><code>#Cleaning the elections data
+elections_clean&lt;-election2020_results %&gt;% 
+  filter(mode==&quot;TOTAL&quot;,candidate==&quot;DONALD J TRUMP&quot;) %&gt;%
+  select(fips, candidatevotes, totalvotes) %&gt;%  #Keeps only the required columns
+  mutate(pct_trump=candidatevotes/totalvotes*100) %&gt;% #Calculates the percentage of votes for Trump
+  select(-candidatevotes,-totalvotes) #Now we have only fips and percentage of votes for Trump</code></pre>
+<p>We next clean the vaccinations dataset and view the populations data.</p>
+<pre class="r"><code>#MODIFYING THE VACCINATIONS DATASET
+
+glimpse(vaccinations)</code></pre>
+<pre><code>## Rows: 999,653
+## Columns: 32
+## $ date                                     &lt;chr&gt; &quot;10/18/2021&quot;, &quot;10/18/2021&quot;, &quot;…
+## $ fips                                     &lt;chr&gt; &quot;08075&quot;, &quot;35013&quot;, &quot;72027&quot;, &quot;5…
+## $ mmwr_week                                &lt;dbl&gt; 42, 42, 42, 42, 42, 42, 42, 4…
+## $ recip_county                             &lt;chr&gt; &quot;Logan County&quot;, &quot;Dona Ana Cou…
+## $ recip_state                              &lt;chr&gt; &quot;CO&quot;, &quot;NM&quot;, &quot;PR&quot;, &quot;WY&quot;, &quot;IL&quot;,…
+## $ series_complete_pop_pct                  &lt;dbl&gt; 32.8, 54.2, 69.2, 28.6, 42.8,…
+## $ series_complete_yes                      &lt;dbl&gt; 7356, 118360, 21116, 2812, 72…
+## $ series_complete_12plus                   &lt;dbl&gt; 7353, 118352, 21110, 2812, 71…
+## $ series_complete_12plus_pop_pct           &lt;dbl&gt; 37.3, 64.5, 77.6, 33.4, 49.8,…
+## $ series_complete_18plus                   &lt;dbl&gt; 7124, 108222, 19527, 2712, 68…
+## $ series_complete_18plus_pop_pct           &lt;dbl&gt; 38.7, 65.5, 78.0, 35.4, 51.7,…
+## $ series_complete_65plus                   &lt;dbl&gt; 2608, 27471, 5046, 1053, 2598…
+## $ series_complete_65plus_pop_pct           &lt;dbl&gt; 64.3, 77.6, 97.3, 52.2, 76.5,…
+## $ completeness_pct                         &lt;dbl&gt; 97.4, 84.4, 95.9, 96.4, 97.8,…
+## $ administered_dose1_recip                 &lt;dbl&gt; 8013, 126735, 22773, 3553, 84…
+## $ administered_dose1_pop_pct               &lt;dbl&gt; 35.8, 58.1, 74.7, 36.1, 50.3,…
+## $ administered_dose1_recip_12plus          &lt;dbl&gt; 8004, NA, 22759, 3553, 8462, …
+## $ administered_dose1_recip_12plus_pop_pct  &lt;dbl&gt; 40.6, 0.0, 83.7, 42.2, 58.6, …
+## $ administered_dose1_recip_18plus          &lt;dbl&gt; 7729, NA, 20997, 3399, 8012, …
+## $ administered_dose1_recip_18plus_pop_pct  &lt;dbl&gt; 42.0, 0.0, 83.9, 44.4, 60.6, …
+## $ administered_dose1_recip_65plus          &lt;dbl&gt; 2698, NA, 5432, 1210, 2882, 3…
+## $ administered_dose1_recip_65plus_pop_pct  &lt;dbl&gt; 66.5, 0.0, 99.9, 60.0, 84.8, …
+## $ svi_ctgy                                 &lt;chr&gt; &quot;C&quot;, &quot;D&quot;, &quot;A&quot;, &quot;A&quot;, &quot;C&quot;, &quot;A&quot;,…
+## $ series_complete_pop_pct_svi              &lt;dbl&gt; 10, 16, 4, 1, 11, 4, 13, 15, …
+## $ series_complete_12plus_pop_pct_svi       &lt;dbl&gt; 10, 16, 4, 2, 11, 4, 14, 15, …
+## $ series_complete_18plus_pop_pct_svi       &lt;dbl&gt; 10, 16, 4, 2, 12, 4, 14, 16, …
+## $ series_complete_65plus_pop_pct_svi       &lt;dbl&gt; 11, 16, 4, 3, 12, 4, 15, 16, …
+## $ metro_status                             &lt;chr&gt; &quot;Non-metro&quot;, &quot;Metro&quot;, &quot;Metro&quot;…
+## $ series_complete_pop_pct_ur_equity        &lt;dbl&gt; 6, 4, 4, 5, 7, 8, 5, 7, 8, NA…
+## $ series_complete_12plus_pop_pct_ur_equity &lt;dbl&gt; 6, 4, 4, 6, 7, 8, 6, 7, 8, NA…
+## $ series_complete_18plus_pop_pct_ur_equity &lt;dbl&gt; 6, 4, 4, 6, 8, 8, 6, 8, 8, NA…
+## $ series_complete_65plus_pop_pct_ur_equity &lt;dbl&gt; 7, 4, 4, 7, 8, 8, 7, 8, 8, NA…</code></pre>
+<pre class="r"><code>head(vaccinations)</code></pre>
+<pre><code>## # A tibble: 6 x 32
+##   date       fips  mmwr_week recip_county    recip_state series_complete_pop_pct
+##   &lt;chr&gt;      &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;           &lt;chr&gt;                         &lt;dbl&gt;
+## 1 10/18/2021 08075        42 Logan County    CO                             32.8
+## 2 10/18/2021 35013        42 Dona Ana County NM                             54.2
+## 3 10/18/2021 72027        42 Camuy Municipio PR                             69.2
+## 4 10/18/2021 56035        42 Sublette County WY                             28.6
+## 5 10/18/2021 17187        42 Warren County   IL                             42.8
+## 6 10/18/2021 19083        42 Hardin County   IA                             50.4
+## # … with 26 more variables: series_complete_yes &lt;dbl&gt;,
+## #   series_complete_12plus &lt;dbl&gt;, series_complete_12plus_pop_pct &lt;dbl&gt;,
+## #   series_complete_18plus &lt;dbl&gt;, series_complete_18plus_pop_pct &lt;dbl&gt;,
+## #   series_complete_65plus &lt;dbl&gt;, series_complete_65plus_pop_pct &lt;dbl&gt;,
+## #   completeness_pct &lt;dbl&gt;, administered_dose1_recip &lt;dbl&gt;,
+## #   administered_dose1_pop_pct &lt;dbl&gt;, administered_dose1_recip_12plus &lt;dbl&gt;,
+## #   administered_dose1_recip_12plus_pop_pct &lt;dbl&gt;,
+## #   administered_dose1_recip_18plus &lt;dbl&gt;,
+## #   administered_dose1_recip_18plus_pop_pct &lt;dbl&gt;,
+## #   administered_dose1_recip_65plus &lt;dbl&gt;,
+## #   administered_dose1_recip_65plus_pop_pct &lt;dbl&gt;, svi_ctgy &lt;chr&gt;,
+## #   series_complete_pop_pct_svi &lt;dbl&gt;,
+## #   series_complete_12plus_pop_pct_svi &lt;dbl&gt;,
+## #   series_complete_18plus_pop_pct_svi &lt;dbl&gt;,
+## #   series_complete_65plus_pop_pct_svi &lt;dbl&gt;, metro_status &lt;chr&gt;,
+## #   series_complete_pop_pct_ur_equity &lt;dbl&gt;,
+## #   series_complete_12plus_pop_pct_ur_equity &lt;dbl&gt;,
+## #   series_complete_18plus_pop_pct_ur_equity &lt;dbl&gt;,
+## #   series_complete_65plus_pop_pct_ur_equity &lt;dbl&gt;</code></pre>
+<pre class="r"><code>vaccinations %&gt;% 
+  group_by(fips) %&gt;% 
+  summarize(date_count=n_distinct(date)) #There are multiple dates associated with each FIPS region. We need to select the latest date.</code></pre>
+<pre><code>## # A tibble: 3,224 x 2
+##    fips  date_count
+##    &lt;chr&gt;      &lt;int&gt;
+##  1 01001        310
+##  2 01003        310
+##  3 01005        310
+##  4 01007        310
+##  5 01009        310
+##  6 01011        310
+##  7 01013        310
+##  8 01015        310
+##  9 01017        310
+## 10 01019        310
+## # … with 3,214 more rows</code></pre>
+<pre class="r"><code>#Cleaning the vaccinations data
+vaccinations_clean&lt;-vaccinations %&gt;% 
+  filter(date==&quot;09/22/2021&quot;) %&gt;% #Keeps the latest data (from 22nd September 2021)
+  mutate(
+    prop_vaccinated=case_when(
+      recip_state %in% c(&quot;CA&quot;, &quot;GA&quot;, &quot;IA&quot;,&quot;MI&quot;, &quot;TX&quot;) ~ administered_dose1_pop_pct,
+      TRUE ~ series_complete_pop_pct
+      ) #Uses administered doses for CA, GA, IA, MI, TX, an approach adopted by the chart we are aiming to replicate. Uses completion percentage for the remaining states.
+  ) %&gt;% 
+  select(fips, prop_vaccinated, recip_county, recip_state) #Keeps only the fips, the proportion of the population who are vaccinated and area data.</code></pre>
+<pre class="r"><code>#VIEWING THE POPULATION DATASET
+glimpse(population)</code></pre>
+<pre><code>## Rows: 3,280
+## Columns: 2
+## $ fips            &lt;chr&gt; &quot;00000&quot;, &quot;01000&quot;, &quot;01001&quot;, &quot;01003&quot;, &quot;01005&quot;, &quot;01007&quot;, …
+## $ population_2020 &lt;dbl&gt; 3.31e+08, 5.02e+06, 5.88e+04, 2.32e+05, 2.52e+04, 2.23…</code></pre>
+<pre class="r"><code>head(population)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   fips  population_2020
+##   &lt;chr&gt;           &lt;dbl&gt;
+## 1 00000       331449281
+## 2 01000         5024279
+## 3 01001           58805
+## 4 01003          231767
+## 5 01005           25223
+## 6 01007           22293</code></pre>
+<pre class="r"><code>#We will map population_2020 to the size of the circles in the ggplot graph.</code></pre>
+<p>Finally we merge the datasets and make the plot of vaccination rates against the percentage who voted for Trump. You will notice that there are several counties who have reported that 0% of their population is vaccinated; perhaps these counties chose not to report their data. As a result, we plot a second graph which omits the 0% vaccination rates.</p>
+<pre class="r"><code>#MERGING THE DATASETS AND MAKING THE PLOTS
+
+#Joining the datasets by FIPS
+merged_data&lt;-elections_clean %&gt;% 
+  left_join(population, by=&quot;fips&quot;) %&gt;% 
+  left_join(vaccinations_clean, by=&quot;fips&quot;)
+
+#Creating a function to make ggplots
+  gg&lt;-function(data){
+    ggplot(data,
+    aes(x=pct_trump,
+        y=prop_vaccinated,
+        fill=case_when(
+          pct_trump&lt;45 ~ &quot;under45&quot;,
+          pct_trump&gt;55 ~ &quot;over55&quot;,
+          TRUE ~ &quot;45-55&quot;
+        )
+        )
+    )+
+  annotate(geom=&quot;rect&quot;,
+    fill=&quot;blue&quot;,
+    alpha=0.1,
+    xmin=0,
+    xmax=45,
+    ymin=0,
+    ymax=100
+  )+
+    annotate(geom=&quot;rect&quot;,
+    fill=&quot;purple&quot;,
+    alpha=0.1,
+    xmin=45,
+    xmax=55,
+    ymin=0,
+    ymax=100
+  )+
+    annotate(geom=&quot;rect&quot;,
+    fill=&quot;red&quot;,
+    alpha=0.1,
+    xmin=55,
+    xmax=100,
+    ymin=0,
+    ymax=100
+  )+
+  geom_point(alpha=0.3, shape=21,aes(size=population_2020),color=&quot;black&quot;)+
+  geom_smooth(method=&quot;lm&quot;, se=FALSE, fill=&quot;blue&quot;)+
+    scale_size(range = c(.1, 25), name=&quot;Population&quot;)+
+  geom_point(color=&quot;black&quot;, size=0.1)+
+  geom_hline(yintercept=c(50.8, 53.9,85), linetype=2, size=0.5)+
+  geom_text(aes(x=6,y=50.8,vjust=-1,label=&quot;ACTUAL 50.8%&quot;), size=2)+
+  geom_text(aes(x=6,y=53.9,vjust=-1,label=&quot;TARGET: 53.9%&quot;), size=2)+
+  geom_text(aes(x=9,y=85,vjust=-1,label=&quot;Herd Immunity threshold (?)&quot;), size=2)+
+  scale_x_continuous(breaks=seq(0,100,by=5), labels=function(x) paste0(x,&quot;%&quot;))+
+  scale_y_continuous(breaks=seq(0,100,by=5), labels=function(x) paste0(x,&quot;%&quot;))+
+  theme(legend.position=&quot;none&quot;)+
+  scale_fill_manual(values=c(&quot;under45&quot;=&quot;blue&quot;, &quot;over55&quot;=&quot;red&quot;, &quot;45-55&quot;=&quot;purple&quot;))+
+  labs(
+    title=&quot;COVID-19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY&quot;,
+    subtitle=&quot;(most states based on FULLY vaccinated only; CA, GA, IA, MI &amp; TX based on total doses administered) \n Data via Centers for Disease Control, COVID Act Now, state health depts&quot;,
+    x=&quot;2020 Trump Vote %&quot;,
+    y=&quot;% of Total Population Vaccinated&quot;
+    )+
+  theme(
+    plot.title = element_text(size = 8),
+    plot.subtitle = element_text(size=6)
+    )+
+  NULL
+  }
+
+#Plot 1: Vaccination rates against percentage who voted Trump
+gg(merged_data)  </code></pre>
+<p><img src="/blogs/vaccinations_files/figure-html/unnamed-chunk-5-1.png" width="648" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># There are several counties who have reported that 0% of their population is vaccinated. Perhaps these counties did not report their data.
+  
+# Which states had counties reporting 0% vaccination rates?
+  merged_data %&gt;% 
+    filter(prop_vaccinated==0) %&gt;% 
+    count(recip_state) #CA, HI, MI and TX.</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##   recip_state     n
+##   &lt;chr&gt;       &lt;int&gt;
+## 1 CA              8
+## 2 HI              4
+## 3 MI             18
+## 4 TX            254</code></pre>
+<pre class="r"><code># Plot 2: Vaccination rates against percentage who voted Trump without the 0% vaccination rate data.
+gg(merged_data %&gt;% filter(prop_vaccinated!=0))</code></pre>
+<p><img src="/blogs/vaccinations_files/figure-html/unnamed-chunk-5-2.png" width="648" style="display: block; margin: auto;" /></p>
