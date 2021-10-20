@@ -96,10 +96,10 @@ params:
         subtitle:
         title: Excess rentals in TfL bike sharing
         url: blogs/tfl
-      - image: pic05.jpg
-        subtitle: Ipsum Dolor Sit Amet
-        title: Consequat
-        url: blogs/ipsum
+      - image: economy.jpeg
+        subtitle: 
+        title: How has GDP changed over time?
+        url: blogs/gdp_growth
       - image: pic06.jpg
         subtitle: Feugiat Amet Tempus
         title: Etiam
