@@ -99,7 +99,7 @@ params:
       - image: economy.jpeg
         subtitle: 
         title: How has GDP changed over time?
-        url: blogs/gdp_growth
+        url: blogs/gdp_change
       - image: pic06.jpg
         subtitle: Feugiat Amet Tempus
         title: Etiam
