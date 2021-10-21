@@ -8,7 +8,7 @@ params:
   banner:
     buttonText: About Me
     subtitle: |-
-      Hi, I'm Leilah, an MFA student at London Business School. Welcome to my website for CA05 Data Analytics.
+      Hi, I'm Leilah, an MFA student at London Business School. Welcome to my website for CA09 Data Analytics.
     title: Welcome
   blog: {Hi, I'm Leilah, a student at London Business School and this is my website showcasing past R projects I have worked on.}
   contact:
