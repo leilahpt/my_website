@@ -51,7 +51,7 @@ The Guardian newspaper has an [election poll tracker for the upcoming German ele
 The list of the opinion polls since Jan 2021 can be found at [Wikipedia](https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election).
 
 
-The following code will scrape the wikipedia page and import the table in a dataframe.
+The following code will scrape the Wikipedia page and import the table in a dataframe.
 
 
 ```{r, scrape_wikipedia_polling_data, warnings= FALSE, message=FALSE}
