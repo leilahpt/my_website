@@ -59,9 +59,9 @@ params:
   image: ''
   name: Leilah Plant-Tchenguiz
   navigation:
-    button1:
-      - name: Get Started
-        url: blogs
+    # button1:
+    #   - name: Get Started
+    #     url: blogs
     # button2:
     #   - name: Log In
     #     url: '#'
@@ -70,8 +70,8 @@ params:
         url: '#'
       - name: About Me
         url: blogs/about_me        
-      - name: Blogs
-        url: blogs
+      # - name: Blogs
+      #   url: blogs
       # - name: Elements
       #   url: elements.html
     menu: Menu
@@ -100,10 +100,10 @@ params:
         subtitle: 
         title: How has GDP changed over time?
         url: blogs/gdp_change
-      - image: pic06.jpg
-        subtitle: Feugiat Amet Tempus
-        title: Etiam
-        url: blogs/ipsum
+      - image: germany.jpeg
+        subtitle: 
+        title: The German Elections
+        url: blogs/polls
   # two:
   #   buttonText: Get Started
   #   enable: yes

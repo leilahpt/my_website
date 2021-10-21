@@ -1,0 +1,151 @@
+---
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "2021-09-30"
+description: The German Elections # the title that will show up once someone gets to this page
+draft: false
+image: germany_sign.jpeg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: polls # slug is the shorthand URL address... no spaces plz
+title: The German Elections
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<p>The Guardian newspaper has an <a href="https://www.theguardian.com/world/2021/aug/20/german-election-poll-tracker-who-will-be-the-next-chancellor">election poll tracker for the upcoming German election</a>. We will replicate this graph.
+The list of the opinion polls since Jan 2021 can be found at <a href="https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election">Wikipedia</a>.</p>
+<p>The following code will scrape the wikipedia page and import the table in a dataframe.</p>
+<pre class="r"><code>url &lt;- &quot;https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election&quot;
+
+# similar graphs and analyses can be found at 
+# https://www.theguardian.com/world/2021/jun/21/german-election-poll-tracker-who-will-be-the-next-chancellor
+# https://www.economist.com/graphic-detail/who-will-succeed-angela-merkel
+
+
+# get tables that exist on wikipedia page 
+tables &lt;- url %&gt;% 
+  read_html() %&gt;% 
+  html_nodes(css=&quot;table&quot;)
+
+
+# parse HTML tables into a dataframe called polls 
+# Use purr::map() to create a list of all tables in URL
+polls &lt;- map(tables, . %&gt;% 
+             html_table(fill=TRUE)%&gt;% 
+             janitor::clean_names())
+
+
+# list of opinion polls
+german_election_polls &lt;- polls[[1]] %&gt;% # the first table on the page contains the list of all opinions polls
+  slice(2:(n()-1)) %&gt;%  # drop the first row, as it contains again the variable names and last row that contains 2017 results
+  mutate(
+         # polls are shown to run from-to, e.g. 9-13 Aug 2021. We keep the last date, 13 Aug here, as the poll date
+         # and we extract it by picking the last 11 characters from that field
+         end_date = str_sub(fieldwork_date, -11),
+         
+         # end_date is still a string, so we convert it into a date object using lubridate::dmy()
+         end_date = dmy(end_date),
+         
+         # we also get the month and week number from the date, if we want to do analysis by month- week, etc.
+         month = month(end_date),
+         week = isoweek(end_date)
+         )</code></pre>
+<p>Next we plot the graph of poll results over time. The solid lines depicted here represent the 14-day rolling average of the election polls.</p>
+<pre class="r"><code># We define the x-axis as the end date of the survey
+# We assign each party a color and make the points see-through
+
+
+german_election_polls_means &lt;- german_election_polls %&gt;% 
+  group_by (end_date) %&gt;% 
+  summarise(mean_union = mean(union, na.rm = TRUE), 
+            mean_spd = mean(spd, na.rm = TRUE), 
+            mean_afd = mean(af_d, na.rm = TRUE),
+            mean_fdp = mean(fdp, na.rm = TRUE),
+            mean_linke = mean(linke, na.rm = TRUE),
+            mean_grune = mean(grune, na.rm = TRUE)
+      )
+
+ggplot(german_election_polls, aes(x = end_date)) + 
+  geom_point(
+    aes(y = union, color = &quot;Union&quot;), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_union, 14, na.pad = TRUE), color = &quot;Union&quot;), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = spd, color = &quot;SPD&quot;), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_spd, 14, na.pad = TRUE), color = &quot;SPD&quot;), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = af_d, color = &quot;AfD&quot;), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_afd, 14, na.pad = TRUE), color = &quot;AfD&quot;), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = fdp, color = &quot;FDP&quot;), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_fdp, 14, na.pad = TRUE), color = &quot;FDP&quot;), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = linke, color = &quot;Linke&quot;), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_linke, 14, na.pad = TRUE), color = &quot;Linke&quot;), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = grune, color = &quot;Grune&quot;), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_grune, 14, na.pad = TRUE), color = &quot;Grune&quot;), 
+    size = 1
+    )+
+  scale_y_continuous(
+    name=&quot;&quot;, 
+    expand = c(0,5), 
+    breaks = seq(0, 45, by = 10),
+    minor_breaks = seq(0, 50, by = 5),
+    labels = label_number(suffix = &quot;%&quot;)
+    ) +
+  scale_x_date(
+    name=&quot;&quot;, 
+    expand = c(0,20), 
+    date_breaks = &quot;1 month&quot;, 
+    date_labels = &quot;%b %Y&quot;) + 
+  coord_fixed(4) +
+  labs(title = &quot;German Election Polling Timeseries&quot;)+
+  scale_color_manual(
+    name=&quot;14-day rolling average %&quot;, 
+    values=c(
+      &quot;SPD&quot;=&quot;#FF0000&quot;,      
+      &quot;Union&quot;=&quot;#000000&quot;,
+      &quot;Grune&quot;=&quot;#006633&quot;,
+      &quot;FDP&quot;=&quot;#FFFF00&quot;,
+      &quot;AfD&quot;=&quot;#0080FF&quot;,      
+      &quot;Linke&quot;=&quot;#A23FAE&quot;
+    )
+    )</code></pre>
+<p><img src="/blogs/polls_files/figure-html/unnamed-chunk-1-1.png" width="960" style="display: block; margin: auto;" /></p>

@@ -1,0 +1,203 @@
+---
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "2021-09-30"
+description: The German Elections # the title that will show up once someone gets to this page
+draft: false
+image: germany_sign.jpeg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: polls # slug is the shorthand URL address... no spaces plz
+title: The German Elections
+---
+
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(fivethirtyeight)
+library(here)
+library(skimr)
+library(janitor)
+library(vroom)
+library(tidyquant)
+library(scales)
+library(zoo)
+library(rvest) # to scrape wikipedia page
+library(ggrepel)
+```
+
+
+The Guardian newspaper has an [election poll tracker for the upcoming German election](https://www.theguardian.com/world/2021/aug/20/german-election-poll-tracker-who-will-be-the-next-chancellor). We will replicate this graph.
+The list of the opinion polls since Jan 2021 can be found at [Wikipedia](https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election).
+
+
+The following code will scrape the wikipedia page and import the table in a dataframe.
+
+
+```{r, scrape_wikipedia_polling_data, warnings= FALSE, message=FALSE}
+url <- "https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election"
+
+# similar graphs and analyses can be found at 
+# https://www.theguardian.com/world/2021/jun/21/german-election-poll-tracker-who-will-be-the-next-chancellor
+# https://www.economist.com/graphic-detail/who-will-succeed-angela-merkel
+
+
+# get tables that exist on wikipedia page 
+tables <- url %>% 
+  read_html() %>% 
+  html_nodes(css="table")
+
+
+# parse HTML tables into a dataframe called polls 
+# Use purr::map() to create a list of all tables in URL
+polls <- map(tables, . %>% 
+             html_table(fill=TRUE)%>% 
+             janitor::clean_names())
+
+
+# list of opinion polls
+german_election_polls <- polls[[1]] %>% # the first table on the page contains the list of all opinions polls
+  slice(2:(n()-1)) %>%  # drop the first row, as it contains again the variable names and last row that contains 2017 results
+  mutate(
+         # polls are shown to run from-to, e.g. 9-13 Aug 2021. We keep the last date, 13 Aug here, as the poll date
+         # and we extract it by picking the last 11 characters from that field
+         end_date = str_sub(fieldwork_date, -11),
+         
+         # end_date is still a string, so we convert it into a date object using lubridate::dmy()
+         end_date = dmy(end_date),
+         
+         # we also get the month and week number from the date, if we want to do analysis by month- week, etc.
+         month = month(end_date),
+         week = isoweek(end_date)
+         )
+```
+
+
+Next we plot the graph of poll results over time. The solid lines depicted here represent the 14-day rolling average of the election polls.
+```{r, fig.width=10, fig.height=7}
+
+# We define the x-axis as the end date of the survey
+# We assign each party a color and make the points see-through
+
+
+german_election_polls_means <- german_election_polls %>% 
+  group_by (end_date) %>% 
+  summarise(mean_union = mean(union, na.rm = TRUE), 
+            mean_spd = mean(spd, na.rm = TRUE), 
+            mean_afd = mean(af_d, na.rm = TRUE),
+            mean_fdp = mean(fdp, na.rm = TRUE),
+            mean_linke = mean(linke, na.rm = TRUE),
+            mean_grune = mean(grune, na.rm = TRUE)
+      )
+
+ggplot(german_election_polls, aes(x = end_date)) + 
+  geom_point(
+    aes(y = union, color = "Union"), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_union, 14, na.pad = TRUE), color = "Union"), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = spd, color = "SPD"), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_spd, 14, na.pad = TRUE), color = "SPD"), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = af_d, color = "AfD"), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_afd, 14, na.pad = TRUE), color = "AfD"), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = fdp, color = "FDP"), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_fdp, 14, na.pad = TRUE), color = "FDP"), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = linke, color = "Linke"), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_linke, 14, na.pad = TRUE), color = "Linke"), 
+    size = 1
+    ) +
+  geom_point(
+    aes(y = grune, color = "Grune"), 
+    alpha = 0.3
+    ) +
+  geom_line(
+    data = german_election_polls_means, 
+    aes(y = rollmean(mean_grune, 14, na.pad = TRUE), color = "Grune"), 
+    size = 1
+    )+
+  scale_y_continuous(
+    name="", 
+    expand = c(0,5), 
+    breaks = seq(0, 45, by = 10),
+    minor_breaks = seq(0, 50, by = 5),
+    labels = label_number(suffix = "%")
+    ) +
+  scale_x_date(
+    name="", 
+    expand = c(0,20), 
+    date_breaks = "1 month", 
+    date_labels = "%b %Y") + 
+  coord_fixed(4) +
+  labs(title = "German Election Polling Timeseries")+
+  scale_color_manual(
+    name="14-day rolling average %", 
+    values=c(
+      "SPD"="#FF0000",      
+      "Union"="#000000",
+      "Grune"="#006633",
+      "FDP"="#FFFF00",
+      "AfD"="#0080FF",      
+      "Linke"="#A23FAE"
+    )
+    )
+
+```
+
+
+
+
+
+
+
+
+

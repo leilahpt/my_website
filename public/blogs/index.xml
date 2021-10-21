@@ -8,21 +8,73 @@
     <language>en-us</language>
     <lastBuildDate>Tue, 31 Oct 2017 22:27:21 -0500</lastBuildDate><atom:link href="https://leilahplant-tchenguiz.netlify.app/blogs/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Aliquam</title>
-      <link>https://leilahplant-tchenguiz.netlify.app/blogs/aliquam/</link>
-      <pubDate>Tue, 31 Oct 2017 22:42:51 -0500</pubDate>
+      <title>How has GDP changed over time?</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/gdp/</link>
+      <pubDate>Tue, 19 Oct 2021 00:00:00 +0000</pubDate>
       
-      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/aliquam/</guid>
-      <description></description>
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/gdp/</guid>
+      <description>The GDP data we will look at is from the United Nations’ National Accounts Main Aggregates Database, which contains estimates of total GDP and its components for all countries from 1970 to today. We will look at how GDP and its components have changed over time, and compare different countries and how much each component contributes to that country’s GDP. The file we will work with is GDP and its breakdown at constant 2010 prices in US Dollars and it has already been saved in the Data directory.</description>
     </item>
     
     <item>
-      <title>Tempus</title>
-      <link>https://leilahplant-tchenguiz.netlify.app/blogs/tempus/</link>
-      <pubDate>Tue, 31 Oct 2017 22:26:13 -0500</pubDate>
+      <title>How has GDP changed over time?</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/gdp_change/</link>
+      <pubDate>Tue, 19 Oct 2021 00:00:00 +0000</pubDate>
       
-      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/tempus/</guid>
-      <description></description>
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/gdp_change/</guid>
+      <description>The GDP data we will look at is from the United Nations’ National Accounts Main Aggregates Database, which contains estimates of total GDP and its components for all countries from 1970 to today. We will look at how GDP and its components have changed over time, and compare different countries and how much each component contributes to that country’s GDP. The file we will work with is GDP and its breakdown at constant 2010 prices in US Dollars and it has already been saved in the Data directory.</description>
+    </item>
+    
+    <item>
+      <title>About Me</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/about_me/</link>
+      <pubDate>Mon, 18 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/about_me/</guid>
+      <description>Hi, I&amp;rsquo;m Leilah and I&amp;rsquo;m a Masters in Financial Analysis student at London Business School. My interest in coding originated a few years ago during an internship in asset management, where I learnt VBA to modify a stock-selection model in Excel. I loved the job and ever since, I have been trying to expand my repertoire of coding languages. The purpose of this website is to showcase examples of code I have created during my university assignments.</description>
+    </item>
+    
+    <item>
+      <title>Excess rentals in TfL bike sharing</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/tfl/</link>
+      <pubDate>Sun, 03 Oct 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/tfl/</guid>
+      <description>In this blog, we will look at how many TfL bikes are hired every day, and the excess rentals over time.
+We get the latest data by running the following:
+url &amp;lt;- &amp;quot;https://data.london.gov.uk/download/number-bicycle-hires/ac29363e-e0cb-47cc-a97a-e216d900a6b0/tfl-daily-cycle-hires.xlsx&amp;quot; # Download TFL data to temporary file httr::GET(url, write_disk(bike.temp &amp;lt;- tempfile(fileext = &amp;quot;.xlsx&amp;quot;))) ## Response [https://airdrive-secure.s3-eu-west-1.amazonaws.com/london/dataset/number-bicycle-hires/2021-09-23T12%3A52%3A20/tfl-daily-cycle-hires.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;amp;X-Amz-Credential=AKIAJJDIMAIVZJDICKHA%2F20211019%2Feu-west-1%2Fs3%2Faws4_request&amp;amp;X-Amz-Date=20211019T165625Z&amp;amp;X-Amz-Expires=300&amp;amp;X-Amz-Signature=8554b9a1d0023343b901efca2fb5e02f0e93a6edaf3e95febb835e731eee4c2f&amp;amp;X-Amz-SignedHeaders=host] ## Date: 2021-10-19 16:56 ## Status: 200 ## Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet ## Size: 174 kB ## &amp;lt;ON DISK&amp;gt; /var/folders/0s/qnkjd6md1rjfls3q0tvyt2wr0000gn/T//RtmpWhHixG/file5a8d788164ff.xlsx # Use read_excel to read it as dataframe bike0 &amp;lt;- read_excel(bike.</description>
+    </item>
+    
+    <item>
+      <title>Do vaccination levels depend on voting preference?</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/trump/</link>
+      <pubDate>Thu, 30 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/trump/</guid>
+      <description>In this short blog, we will reproduce a chart of vaccination levels against the proportion of a state’s population who voted for Trump using updated data. The chart we wish to reproduce is available here.
+To get vaccination by county, we will use data from the CDC We will use County Presidential Election Returns 2000-2020 Finally, we also need an estimate of the population of each county  First we clean the elections data.</description>
+    </item>
+    
+    <item>
+      <title>Risk-Return of DJIA stocks</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/risk_return/</link>
+      <pubDate>Thu, 30 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/risk_return/</guid>
+      <description>Let’s visualise the risk and return of the Dow Jones Industrial Average (DJIA) stocks. Besides the thirty stocks that make up the DJIA, we will also add SPY which is an SP500 ETF (Exchange Traded Fund).
+We will use the rvest package to scrape the Wikipedia page for the constituents of DJIA
+djia_url &amp;lt;- &amp;quot;https://en.wikipedia.org/wiki/Dow_Jones_Industrial_Average&amp;quot; #get tables that exist on URL tables &amp;lt;- djia_url %&amp;gt;% read_html() %&amp;gt;% html_nodes(css=&amp;quot;table&amp;quot;) # parse HTML tables into a dataframe called djia.</description>
+    </item>
+    
+    <item>
+      <title>The German Elections</title>
+      <link>https://leilahplant-tchenguiz.netlify.app/blogs/polls/</link>
+      <pubDate>Thu, 30 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://leilahplant-tchenguiz.netlify.app/blogs/polls/</guid>
+      <description>The Guardian newspaper has an election poll tracker for the upcoming German election. We will replicate this graph. The list of the opinion polls since Jan 2021 can be found at Wikipedia.
+The following code will scrape the wikipedia page and import the table in a dataframe.
+url &amp;lt;- &amp;quot;https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election&amp;quot; # similar graphs and analyses can be found at # https://www.theguardian.com/world/2021/jun/21/german-election-poll-tracker-who-will-be-the-next-chancellor # https://www.economist.com/graphic-detail/who-will-succeed-angela-merkel # get tables that exist on wikipedia page tables &amp;lt;- url %&amp;gt;% read_html() %&amp;gt;% html_nodes(css=&amp;quot;table&amp;quot;) # parse HTML tables into a dataframe called polls # Use purr::map() to create a list of all tables in URL polls &amp;lt;- map(tables, .</description>
     </item>
     
     <item>

@@ -1,0 +1,245 @@
+---
+categories:  
+- ""    #the front matter should be like the one found in, e.g., blog2.md. It cannot be like the normal Rmd we used
+- ""
+date: "2021-09-30"
+description: Do vaccination levels depend on voting preference? # the title that will show up once someone gets to this page
+draft: false
+image: vaccines.jpeg # save picture in \static\img\blogs. Acceptable formats= jpg, jpeg, or png . Your iPhone pics wont work
+
+keywords: ""
+slug: trump # slug is the shorthand URL address... no spaces plz
+title: Do vaccination levels depend on voting preference?
+---
+  
+```{r, setup, echo=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE, 
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+options(digits = 3)
+
+# default figure size
+knitr::opts_chunk$set(
+  fig.width=6.75, 
+  fig.height=6.75,
+  fig.align = "center"
+)
+```
+
+
+```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(fivethirtyeight)
+library(here)
+library(skimr)
+library(janitor)
+library(vroom)
+library(tidyquant)
+library(scales)
+library(zoo)
+library(rvest) # to scrape wikipedia page
+library(ggrepel)
+```
+
+In this short blog, we will reproduce a chart of vaccination levels against the proportion of a state's population who voted for Trump using updated data. The chart we wish to reproduce is available [here](https://acasignups.net/21/07/18/racial-factor-theres-77-counties-which-are-deep-blue-also-low-vaxx-guess-what-they-have). 
+
+1. To get vaccination by county, we will use [data from the CDC](https://data.cdc.gov/Vaccinations/COVID-19-Vaccinations-in-the-United-States-County/8xkx-amqh) 
+1. We will use [County Presidential Election Returns 2000-2020](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ)
+1. Finally, we also need an estimate of the [population of each county](https://www.ers.usda.gov/webdocs/DataFiles/48747/PopulationEstimates.csv?v=2232)
+ 
+
+```{r, echo=FALSE, cache=TRUE}
+
+# Download CDC vaccination by county
+
+cdc_url <- "https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD"
+vaccinations <- vroom(cdc_url) %>%
+  janitor::clean_names() %>% 
+  filter(fips != "UNK") # remove counties that have an unknown (UNK) FIPS code
+
+# Download County Presidential Election Returns
+# https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
+election2020_results <- vroom(here::here("data", "countypres_2000-2020.csv")) %>% 
+  janitor::clean_names() %>% 
+  
+  # just keep the results for the 2020 election
+  filter(year == "2020") %>% 
+  
+  # change original name county_fips to fips, to be consistent with the other two files
+  rename (fips = county_fips)
+
+# Download county population data
+#population_url <- "https://www.ers.usda.gov/webdocs/DataFiles/48747/PopulationEstimates.csv?v=2232"
+population <- vroom(here::here("data", "PopulationEstimates.csv")) %>% 
+  pivot_wider(names_from=Attribute, values_from=Value) %>% 
+  janitor::clean_names() %>%
+  
+  # select the latest data, namely 2020
+  select(fips = fip_stxt, population_2020) %>% 
+  
+  # pad FIPS codes with leading zeros, so they are always made up of 5 characters
+  mutate(fips = stringi::stri_pad_left(fips, width=5, pad = "0"))
+
+```
+
+First we clean the elections data.
+
+```{r}
+
+#MODIFYING THE ELECTIONS DATASET
+
+#Viewing the election dataset
+glimpse(election2020_results) 
+head(election2020_results)
+
+#Checking the possible election candidates
+election2020_results %>% 
+  select(candidate) %>% 
+  unique() #We can see that Trump has been entered as 'DONALD J TRUMP'
+
+#Cleaning the elections data
+elections_clean<-election2020_results %>% 
+  filter(mode=="TOTAL",candidate=="DONALD J TRUMP") %>%
+  select(fips, candidatevotes, totalvotes) %>%  #Keeps only the required columns
+  mutate(pct_trump=candidatevotes/totalvotes*100) %>% #Calculates the percentage of votes for Trump
+  select(-candidatevotes,-totalvotes) #Now we have only fips and percentage of votes for Trump
+
+```
+
+We next clean the vaccinations dataset and view the populations data.
+
+```{r}
+
+#MODIFYING THE VACCINATIONS DATASET
+
+glimpse(vaccinations)
+head(vaccinations)
+
+vaccinations %>% 
+  group_by(fips) %>% 
+  summarize(date_count=n_distinct(date)) #There are multiple dates associated with each FIPS region. We need to select the latest date.
+
+#Cleaning the vaccinations data
+vaccinations_clean<-vaccinations %>% 
+  filter(date=="09/22/2021") %>% #Keeps the latest data (from 22nd September 2021)
+  mutate(
+    prop_vaccinated=case_when(
+      recip_state %in% c("CA", "GA", "IA","MI", "TX") ~ administered_dose1_pop_pct,
+      TRUE ~ series_complete_pop_pct
+      ) #Uses administered doses for CA, GA, IA, MI, TX, an approach adopted by the chart we are aiming to replicate. Uses completion percentage for the remaining states.
+  ) %>% 
+  select(fips, prop_vaccinated, recip_county, recip_state) #Keeps only the fips, the proportion of the population who are vaccinated and area data.
+  
+```
+
+
+```{r}
+
+#VIEWING THE POPULATION DATASET
+glimpse(population)
+head(population)
+
+#We will map population_2020 to the size of the circles in the ggplot graph.
+
+```
+
+Finally we merge the datasets and make the plot of vaccination rates against the percentage who voted for Trump. You will notice that there are several counties who have reported that 0% of their population is vaccinated; perhaps these counties chose not to report their data. As a result, we plot a second graph which omits the 0% vaccination rates.
+```{r}
+
+#MERGING THE DATASETS AND MAKING THE PLOTS
+
+#Joining the datasets by FIPS
+merged_data<-elections_clean %>% 
+  left_join(population, by="fips") %>% 
+  left_join(vaccinations_clean, by="fips")
+
+#Creating a function to make ggplots
+  gg<-function(data){
+    ggplot(data,
+    aes(x=pct_trump,
+        y=prop_vaccinated,
+        fill=case_when(
+          pct_trump<45 ~ "under45",
+          pct_trump>55 ~ "over55",
+          TRUE ~ "45-55"
+        )
+        )
+    )+
+  annotate(geom="rect",
+    fill="blue",
+    alpha=0.1,
+    xmin=0,
+    xmax=45,
+    ymin=0,
+    ymax=100
+  )+
+    annotate(geom="rect",
+    fill="purple",
+    alpha=0.1,
+    xmin=45,
+    xmax=55,
+    ymin=0,
+    ymax=100
+  )+
+    annotate(geom="rect",
+    fill="red",
+    alpha=0.1,
+    xmin=55,
+    xmax=100,
+    ymin=0,
+    ymax=100
+  )+
+  geom_point(alpha=0.3, shape=21,aes(size=population_2020),color="black")+
+  geom_smooth(method="lm", se=FALSE, fill="blue")+
+    scale_size(range = c(.1, 25), name="Population")+
+  geom_point(color="black", size=0.1)+
+  geom_hline(yintercept=c(50.8, 53.9,85), linetype=2, size=0.5)+
+  geom_text(aes(x=6,y=50.8,vjust=-1,label="ACTUAL 50.8%"), size=2)+
+  geom_text(aes(x=6,y=53.9,vjust=-1,label="TARGET: 53.9%"), size=2)+
+  geom_text(aes(x=9,y=85,vjust=-1,label="Herd Immunity threshold (?)"), size=2)+
+  scale_x_continuous(breaks=seq(0,100,by=5), labels=function(x) paste0(x,"%"))+
+  scale_y_continuous(breaks=seq(0,100,by=5), labels=function(x) paste0(x,"%"))+
+  theme(legend.position="none")+
+  scale_fill_manual(values=c("under45"="blue", "over55"="red", "45-55"="purple"))+
+  labs(
+    title="COVID-19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY",
+    subtitle="(most states based on FULLY vaccinated only; CA, GA, IA, MI & TX based on total doses administered) \n Data via Centers for Disease Control, COVID Act Now, state health depts",
+    x="2020 Trump Vote %",
+    y="% of Total Population Vaccinated"
+    )+
+  theme(
+    plot.title = element_text(size = 8),
+    plot.subtitle = element_text(size=6)
+    )+
+  NULL
+  }
+
+#Plot 1: Vaccination rates against percentage who voted Trump
+gg(merged_data)  
+  
+# There are several counties who have reported that 0% of their population is vaccinated. Perhaps these counties did not report their data.
+  
+# Which states had counties reporting 0% vaccination rates?
+  merged_data %>% 
+    filter(prop_vaccinated==0) %>% 
+    count(recip_state) #CA, HI, MI and TX.
+  
+# Plot 2: Vaccination rates against percentage who voted Trump without the 0% vaccination rate data.
+gg(merged_data %>% filter(prop_vaccinated!=0))
+
+
+```
+
+
+
+
+
+
+
+
+
